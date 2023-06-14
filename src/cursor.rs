@@ -23,6 +23,20 @@ impl<T: AsRef<[u8]>> Cursor<T> {
         &self.inner.as_ref()[len..]
     }
 
+    pub fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        let inner = self.inner.as_ref();
+        let amt = core::cmp::min(buf.len(), inner.len());
+        let a = &inner[..amt];
+
+        if amt == 1 {
+            buf[0] = a[0];
+        } else {
+            buf[..amt].copy_from_slice(a);
+        }
+        
+        Ok(amt)
+    }
+
     pub fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> {
         let inner = self.inner.as_ref();
         if buf.len() > inner.len() {
