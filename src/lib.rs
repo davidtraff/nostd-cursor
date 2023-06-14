@@ -8,7 +8,7 @@ pub use byteorder::*;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
-    InsufficientLength,
+    UnexpectedEof,
 }
 
 pub type Result<T> = core::result::Result<T, Error>;

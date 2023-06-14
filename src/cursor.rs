@@ -17,25 +17,26 @@ impl<T: AsRef<[u8]>> Cursor<T> {
         self.position
     }
 
+    pub fn remaining_slice(&self) -> &[u8] {
+        let len = self.position.min(self.inner.as_ref().len());
+
+        &self.inner.as_ref()[len..]
+    }
+
     pub fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> {
         let inner = self.inner.as_ref();
-        let len = buf.len();
-        let remaining = inner.len() - self.position;
+        if buf.len() > inner.len() {
+            return Err(Error::UnexpectedEof);
+        }
+        let a = &inner[..buf.len()];
 
-        if len > remaining {
-            return Err(Error::InsufficientLength);
+        if buf.len() == 1 {
+            buf[0] = a[0];
+        } else {
+            buf.copy_from_slice(a);
         }
 
-        let start = self.position;
-        let end = start + len;
-
-        debug_assert!(end - start == len);
-
-        let slice = &inner[start..end];
-
-        buf.copy_from_slice(slice);
-
-        self.position = end;
+        self.position += buf.len();
 
         Ok(())
     }
@@ -76,6 +77,6 @@ mod tests {
         let mut cursor = Cursor::new([0u8, 1, 2, 3, 4]);
         let mut buf = [0u8; LEN];
 
-        assert_eq!(Err(Error::InsufficientLength), cursor.read_exact(&mut buf));
+        assert_eq!(Err(Error::UnexpectedEof), cursor.read_exact(&mut buf));
     }
 }
