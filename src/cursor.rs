@@ -5,7 +5,7 @@ pub struct Cursor<T> {
     position: usize,
 }
 
-impl<T: AsRef<[u8]>> Cursor<T> {
+impl<T> Cursor<T> {
     pub fn new(inner: T) -> Self {
         Self {
             inner,
@@ -16,7 +16,9 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     pub fn position(&self) -> usize {
         self.position
     }
+}
 
+impl<T: AsRef<[u8]>> Cursor<T> {
     pub fn remaining_slice(&self) -> &[u8] {
         let len = self.position.min(self.inner.as_ref().len());
 
@@ -53,6 +55,25 @@ impl<T: AsRef<[u8]>> Cursor<T> {
         self.position += buf.len();
 
         Ok(())
+    }
+}
+
+impl<T: AsMut<[u8]>> Cursor<T> {
+    pub fn remaining_slice_mut(&mut self) -> &mut [u8] {
+        let len = self.position.min(self.inner.as_mut().len());
+
+        &mut self.inner.as_mut()[len..]
+    }
+
+    pub fn write(&mut self, data: &[u8]) -> Result<usize> {
+        let slice = self.remaining_slice_mut();
+        let amt = data.len().min(slice.len());
+
+        slice.copy_from_slice(&data[..amt]);
+
+        self.position += amt;
+        
+        Ok(amt)
     }
 }
 
