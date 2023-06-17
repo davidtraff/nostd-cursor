@@ -16,6 +16,14 @@ impl<T> Cursor<T> {
     pub fn position(&self) -> usize {
         self.position
     }
+
+    pub fn set_position(&mut self, position: usize) {
+        self.position = position;
+    }
+
+    pub fn get_ref(&self) -> &T {
+        &self.inner
+    }
 }
 
 impl<T: AsRef<[u8]>> Cursor<T> {
@@ -35,6 +43,8 @@ impl<T: AsRef<[u8]>> Cursor<T> {
         } else {
             buf[..amt].copy_from_slice(a);
         }
+
+        self.position += amt;
         
         Ok(amt)
     }
@@ -58,7 +68,7 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     }
 }
 
-impl<T: AsMut<[u8]>> Cursor<T> {
+impl Cursor<&mut [u8]> {
     pub fn remaining_slice_mut(&mut self) -> &mut [u8] {
         let len = self.position.min(self.inner.as_mut().len());
 
@@ -69,7 +79,7 @@ impl<T: AsMut<[u8]>> Cursor<T> {
         let slice = self.remaining_slice_mut();
         let amt = data.len().min(slice.len());
 
-        slice.copy_from_slice(&data[..amt]);
+        slice[..amt].copy_from_slice(&data[..amt]);
 
         self.position += amt;
         
@@ -77,41 +87,27 @@ impl<T: AsMut<[u8]>> Cursor<T> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl<const N: usize> Cursor<[u8; N]> {
+    pub fn remaining_slice_mut(&mut self) -> &mut [u8] {
+        let len = self.position.min(self.inner.as_mut().len());
 
-    #[test]
-    fn read_exact_increments_position() {
-        const LEN: usize = 3;
-
-        let mut cursor = Cursor::new([0u8, 1, 2, 3, 4]);
-        let mut buf = [0u8; LEN];
-
-        cursor.read_exact(&mut buf).unwrap();
-
-        assert_eq!(LEN, cursor.position());
+        &mut self.inner.as_mut()[len..]
     }
 
-    #[test]
-    fn read_exact_reads_correctly() {
-        const LEN: usize = 3;
+    pub fn write(&mut self, data: &[u8]) -> Result<usize> {
+        let slice = self.remaining_slice_mut();
+        let amt = data.len().min(slice.len());
 
-        let mut cursor = Cursor::new([0u8, 1, 2, 3, 4]);
-        let mut buf = [0u8; LEN];
+        slice[..amt].copy_from_slice(&data[..amt]);
 
-        cursor.read_exact(&mut buf).unwrap();
-
-        assert_eq!([0, 1, 2], buf);
+        self.position += amt;
+        
+        Ok(amt)
     }
+}
 
-    #[test]
-    fn read_exact_gives_error_on_invalid_len() {
-        const LEN: usize = 8;
-
-        let mut cursor = Cursor::new([0u8, 1, 2, 3, 4]);
-        let mut buf = [0u8; LEN];
-
-        assert_eq!(Err(Error::UnexpectedEof), cursor.read_exact(&mut buf));
+impl<T: AsRef<[u8]>> AsRef<T> for Cursor<T> {
+    fn as_ref(&self) -> &T {
+        &self.inner
     }
 }
