@@ -4,12 +4,14 @@ Since it's impossible to use `std::io::Cursor<T>` in a no_std environment I deci
 
 ## Usage
 
+This package comes by default with the byteorder-feature enabled.
+
 ### Cursor WITHOUT byteorder
-A normal cursor can be found in `nostd_cursor::cursor::Cursor`
+A normal cursor can be found in `nostd_cursor::Cursor`, remember to set `default-features = false` in your Cargo.toml.
 
 ### Cursor WITH byteorder
 Either use `nostd_cursor::LECursor<T>` or `nostd_cursor::BECursor<T>`.
 
 ## Contribute
 
-At this point I've only trivially implemented `Cursor::read_exact()`. If you need anything else that is implemented in the std-version feel free to create a pull request! I'm only planning to add more features when I need them for my personal projects.
+Most of the API surrounding `std::io::Read` and `std::io::Write` isn't implemented yet. If there's something missing that you need feel free to submit a PR.

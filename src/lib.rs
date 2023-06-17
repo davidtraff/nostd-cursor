@@ -1,6 +1,8 @@
 #![no_std]
 
-pub mod cursor;
+mod cursor;
+
+pub use cursor::Cursor;
 
 #[cfg(feature = "byteorder")]
 mod bo;
@@ -18,3 +20,7 @@ pub enum Error {
 }
 
 pub type Result<T> = core::result::Result<T, Error>;
+
+pub fn test() {
+    
+}
