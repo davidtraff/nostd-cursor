@@ -24,9 +24,9 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     }
 
     pub fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        let inner = self.inner.as_ref();
-        let amt = core::cmp::min(buf.len(), inner.len());
-        let a = &inner[..amt];
+        let slice = self.remaining_slice();
+        let amt = buf.len().min(slice.len());
+        let a = &slice[..amt];
 
         if amt == 1 {
             buf[0] = a[0];
@@ -38,11 +38,11 @@ impl<T: AsRef<[u8]>> Cursor<T> {
     }
 
     pub fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> {
-        let inner = self.inner.as_ref();
-        if buf.len() > inner.len() {
+        let slice = self.remaining_slice();
+        if buf.len() > slice.len() {
             return Err(Error::UnexpectedEof);
         }
-        let a = &inner[..buf.len()];
+        let a = &slice[..buf.len()];
 
         if buf.len() == 1 {
             buf[0] = a[0];

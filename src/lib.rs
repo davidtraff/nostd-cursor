@@ -5,7 +5,6 @@ pub mod cursor;
 #[cfg(feature = "byteorder")]
 mod bo;
 
-
 #[cfg(feature = "byteorder")]
 pub use bo::*;
 
